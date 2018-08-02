@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connections>
+  <Connection>
+    <IP>192.168.1.92018/08/02 02:41:09</IP>
+    <Name>Zach test</Name>
+    <Status>Online</Status>
+    <Email>True</Email>
+    <Time>2018/08/02 02:41:09</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.92018/08/02 02:45:02</IP>
+    <Name>Zach test</Name>
+    <Status>Online</Status>
+    <Email>True</Email>
+    <Time>8/2/2018 2:45:02 AM</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.92018/08/02 02:45:45</IP>
+    <Name>Zach test</Name>
+    <Status>Online</Status>
+    <Email>True</Email>
+    <Time>8/2/2018 2:45:45 AM</Time>
+  </Connection>
+</Connections>
