@@ -48,19 +48,23 @@ Public Class XMLController
             node = currEle
         End If
 
+        'Console.WriteLine("START SETTING OR CHANGING NEW CONNECTION ___")
+        'Console.WriteLine(connection.ToString())
+        'Console.WriteLine("END   SETTING OR CHANGING NEW CONNECTION ___")
+
 
         'updated current connection settings
         node.SetElementValue("IP", connection.getIP())
         node.SetElementValue("Name", connection.getName())
         node.SetElementValue("Status", connection.getStatusAsString())
         node.SetElementValue("Email", connection.getSendEmailOnCrash())
-        node.SetElementValue("Time", connection.getTimeSInceLastCheck())
+        node.SetElementValue("Time", connection.getTimeOfLastCheck())
 
         doc.Save(fileLocation)
 
     End Sub
 
-    Public Shared Function ReadXML() As List(Of Connection)
+    Public Shared Function GetAllConnectionsFromXML() As List(Of Connection)
         Dim cons As List(Of Connection) = New List(Of Connection)
 
         Try
@@ -75,7 +79,7 @@ Public Class XMLController
             nodeList = doc.SelectNodes("/Connections/Connection")
             'Loop through the nodes
             For Each currentNode In nodeList
-                cons.Add(New Connection(currentNode.ChildNodes.Item(0).InnerText,
+                cons.Add(New Connection(Net.IPAddress.Parse(currentNode.ChildNodes.Item(0).InnerText),
                                             currentNode.ChildNodes.Item(1).InnerText,
                                             currentNode.ChildNodes.Item(2).InnerText,
                                              currentNode.ChildNodes.Item(3).InnerText,
@@ -87,6 +91,39 @@ Public Class XMLController
         End Try
 
         Return cons
+
+    End Function
+
+    Public Shared Function GetConnectionFromXML(ip As Net.IPAddress) As Connection
+        Dim cons As List(Of Connection) = New List(Of Connection)
+
+        Try
+            Dim doc As XmlDocument
+            Dim nodeList As XmlNodeList
+            Dim currentNode As XmlNode
+            'Create the XML Document
+            doc = New XmlDocument()
+            'Load the Xml file
+            doc.Load(fileLocation)
+            'Get the list of name nodes 
+            nodeList = doc.SelectNodes("/Connections/Connection")
+            'Loop through the nodes
+            For Each currentNode In nodeList
+                If Net.IPAddress.Parse(currentNode.ChildNodes.Item(0).InnerText).ToString() = ip.ToString() Then
+                    Return New Connection(Net.IPAddress.Parse(currentNode.ChildNodes.Item(0).InnerText),
+                                            currentNode.ChildNodes.Item(1).InnerText,
+                                            currentNode.ChildNodes.Item(2).InnerText,
+                                             currentNode.ChildNodes.Item(3).InnerText,
+                                            DateTime.Parse(currentNode.ChildNodes.Item(4).InnerText))
+                End If
+            Next
+        Catch errorVariable As Exception
+            'Error trapping
+            Console.Write(errorVariable.ToString())
+        End Try
+
+        Return Nothing
+
 
     End Function
 

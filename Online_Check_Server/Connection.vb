@@ -7,38 +7,44 @@ Imports System.Net.Sockets
 Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
+Imports Online_Check_Server
 
 Public Class Connection
-    Public ip As String
+    Public ip As IPAddress
     Public name As String
     Public status As Form1.ConnectionStatus
-    Public sendEmailOnCrash As String
-    Public timeSinceLastCheck As DateTime
+    Public sendEmailOnCrash As Boolean
+    Public timeOfLastCheck As DateTime
+    Public tempSendEmailOnCrash As Boolean
 
 
-    Sub New(ip As String, name As String, status As Form1.ConnectionStatus, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
-        Me.ip = ip ' + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")
+    Sub New(ip As IPAddress, name As String, status As Form1.ConnectionStatus, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
+        Me.ip = ip
         Me.name = name
         Me.status = status
         Me.sendEmailOnCrash = sendEmailOnCrash
-        Me.timeSinceLastCheck = timeSinceLastCheck
+        Me.timeOfLastCheck = timeSinceLastCheck
+        Me.tempSendEmailOnCrash = sendEmailOnCrash
 
-        Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip)
+        Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip.ToString())
 
     End Sub
-    Sub New(ip As String, name As String, status As String, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
-        Me.ip = ip '+ DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")
+    Sub New(ip As IPAddress, name As String, status As String, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
+        Me.ip = ip
         Me.name = name
         Me.status = convertStringToConnectionStatus(status)
         Me.sendEmailOnCrash = sendEmailOnCrash
-        Me.timeSinceLastCheck = timeSinceLastCheck
+        Me.timeOfLastCheck = timeSinceLastCheck
+        Me.tempSendEmailOnCrash = sendEmailOnCrash
 
-        Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip)
+        Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip.ToString())
 
     End Sub
 
     Public Function getIP() As String
-        Return ip
+        Dim strIP As String = ip.ToString()
+        'strIP = strIP.Substring(0, strIP.LastIndexOf(":"))
+        Return strIP
 
     End Function
 
@@ -49,11 +55,19 @@ Public Class Connection
     Public Function getName() As String
         Return name
     End Function
+
+    Public Sub setName(name As String)
+        Me.name = name
+    End Sub
     Public Function getSendEmailOnCrash() As String
-        Return sendEmailOnCrash.ToString()
+        If sendEmailOnCrash Then
+            Return "True"
+        Else
+            Return "False"
+        End If
     End Function
-    Public Function getTimeSInceLastCheck() As String
-        Return timeSinceLastCheck
+    Public Function getTimeOfLastCheck() As DateTime
+        Return timeOfLastCheck
     End Function
 
     Public Function getStatusAsString() As String
@@ -66,6 +80,20 @@ Public Class Connection
         End If
     End Function
 
+    Public Sub flipEmailStatus()
+        sendEmailOnCrash = Not sendEmailOnCrash
+    End Sub
+
+    Public Sub SetOffline()
+
+        status = Form1.ConnectionStatus.Offline
+
+    End Sub
+
+    Public Sub SetOnline()
+        status = Form1.ConnectionStatus.Online
+    End Sub
+
     Public Function convertStringToConnectionStatus(status As String) As Form1.ConnectionStatus
         If status = "Online" Then
             Return Form1.ConnectionStatus.Online
@@ -77,13 +105,30 @@ Public Class Connection
 
     End Function
 
-    Public Overloads Function Equals(ByVal other As Connection)
-        If ip = other.ip Then
-            Return True
-        Else
-            Return False
-        End If
+    Public Overrides Function ToString() As String
+        Dim output As String = ""
+
+        output += "IP: " + ip.ToString()
+        output += Environment.NewLine + "NAME: " + name.ToString()
+        output += Environment.NewLine + "STATUS: " + status.ToString()
+        output += Environment.NewLine + "EMAIL: " + sendEmailOnCrash.ToString()
+        output += Environment.NewLine + "TIME: " + timeOfLastCheck.ToString()
+
+
+        Return output
     End Function
+
+
+    Public Overrides Function Equals(obj As Object) As Boolean
+        Dim connection = TryCast(obj, Connection)
+        Return connection IsNot Nothing AndAlso
+               EqualityComparer(Of IPAddress).Default.Equals(ip, connection.ip)
+    End Function
+
+    Public Function ForceSendMessage() As Boolean
+        Return True
+    End Function
+
 
 End Class
 
