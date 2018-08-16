@@ -1,2 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Settings />
+<Settings>
+  <Setting>
+    <Email></Email>
+    <RefreshRate>10000</RefreshRate>
+    <TimeToOffline>1</TimeToOffline>
+  </Setting>
+</Settings>

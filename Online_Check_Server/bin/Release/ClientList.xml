@@ -2,9 +2,9 @@
 <Connections>
   <Connection>
     <IP>192.168.1.9</IP>
-    <Name>Unnamed</Name>
-    <Status>Online</Status>
-    <Email>True</Email>
-    <Time>2018-08-16T02:05:27.6589621-04:00</Time>
+    <Name>Bing</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
+    <Time>2018-08-16T11:29:19.0167984-04:00</Time>
   </Connection>
 </Connections>

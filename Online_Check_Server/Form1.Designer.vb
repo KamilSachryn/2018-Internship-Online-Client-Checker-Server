@@ -94,7 +94,7 @@ Partial Class Form1
         Me.gb_IpRange.Controls.Add(Me.lbl_IPRangeFrom)
         Me.gb_IpRange.Controls.Add(Me.tb_higherIPRange)
         Me.gb_IpRange.Controls.Add(Me.tb_lowerIPRange)
-        Me.gb_IpRange.Location = New System.Drawing.Point(20, 336)
+        Me.gb_IpRange.Location = New System.Drawing.Point(12, 336)
         Me.gb_IpRange.Margin = New System.Windows.Forms.Padding(2)
         Me.gb_IpRange.Name = "gb_IpRange"
         Me.gb_IpRange.Padding = New System.Windows.Forms.Padding(2)
@@ -143,7 +143,7 @@ Partial Class Form1
         '
         Me.gb_serverControls.Controls.Add(Me.btn_forceRefresh)
         Me.gb_serverControls.Controls.Add(Me.btn_toggleServerCheck)
-        Me.gb_serverControls.Location = New System.Drawing.Point(257, 336)
+        Me.gb_serverControls.Location = New System.Drawing.Point(249, 336)
         Me.gb_serverControls.Margin = New System.Windows.Forms.Padding(2)
         Me.gb_serverControls.Name = "gb_serverControls"
         Me.gb_serverControls.Padding = New System.Windows.Forms.Padding(2)
@@ -174,7 +174,7 @@ Partial Class Form1
         '
         'tb_ServerName
         '
-        Me.tb_ServerName.Location = New System.Drawing.Point(39, 46)
+        Me.tb_ServerName.Location = New System.Drawing.Point(15, 40)
         Me.tb_ServerName.Name = "tb_ServerName"
         Me.tb_ServerName.Size = New System.Drawing.Size(100, 20)
         Me.tb_ServerName.TabIndex = 3
@@ -182,9 +182,9 @@ Partial Class Form1
         'gb_ServerName
         '
         Me.gb_ServerName.Controls.Add(Me.tb_ServerName)
-        Me.gb_ServerName.Location = New System.Drawing.Point(525, 336)
+        Me.gb_ServerName.Location = New System.Drawing.Point(500, 336)
         Me.gb_ServerName.Name = "gb_ServerName"
-        Me.gb_ServerName.Size = New System.Drawing.Size(200, 100)
+        Me.gb_ServerName.Size = New System.Drawing.Size(130, 87)
         Me.gb_ServerName.TabIndex = 4
         Me.gb_ServerName.TabStop = False
         Me.gb_ServerName.Text = "Server Name"
@@ -199,7 +199,7 @@ Partial Class Form1
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SettingsToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(800, 24)
+        Me.MenuStrip1.Size = New System.Drawing.Size(642, 24)
         Me.MenuStrip1.TabIndex = 5
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -213,7 +213,7 @@ Partial Class Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 450)
+        Me.ClientSize = New System.Drawing.Size(642, 428)
         Me.Controls.Add(Me.gb_ServerName)
         Me.Controls.Add(Me.gb_serverControls)
         Me.Controls.Add(Me.gb_IpRange)

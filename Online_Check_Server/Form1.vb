@@ -195,8 +195,9 @@ Public Class Form1
             XMLController.AddItemToClientListXML(con)
 
 
-            messageController.SendEmail(XMLController.GetConnectionFromClientListXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text)))
 
+            messageController.SendEmail(XMLController.GetConnectionFromClientListXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text)))
+            MsgBox("Server at IP " + con.getIP() + " is down")
         End If
         '  Next
     End Sub

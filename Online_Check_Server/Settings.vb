@@ -119,6 +119,7 @@ Public Class Settings
             list.AddRange({Email, RefreshRate, TimeToOffline})
             XMLController.saveSettings(list)
             mainForm.UpdateSettingsValues()
+            MsgBox("Settings Saved", MsgBoxStyle.Information)
 
         Else
             MsgBox("Invalid inputs, settings not saved", MsgBoxStyle.Exclamation, "Error")
