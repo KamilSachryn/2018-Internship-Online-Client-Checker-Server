@@ -3,8 +3,43 @@
   <Connection>
     <IP>192.168.1.9</IP>
     <Name>Unnamed</Name>
-    <Status>Offline</Status>
+    <Status>Online</Status>
     <Email>True</Email>
+    <Time>2018-08-16T02:03:57.4270763-04:00</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.10</IP>
+    <Name>Unnfiebmooo</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
     <Time>2018-08-07T19:00:06.1644709-04:00</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.11</IP>
+    <Name>bloopie bloop</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
+    <Time>2018-08-07T19:00:06.1644709-04:00</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.12</IP>
+    <Name>give me some fuck</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
+    <Time>2018-08-07T19:00:06.1644709-04:00</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.99</IP>
+    <Name>Asperagus</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
+    <Time>2018-08-12T02:25:56.7493807-04:00</Time>
+  </Connection>
+  <Connection>
+    <IP>192.168.1.98</IP>
+    <Name>Unnamed</Name>
+    <Status>Offline</Status>
+    <Email>False</Email>
+    <Time>2018-08-12T02:55:25.1649306-04:00</Time>
   </Connection>
 </Connections>

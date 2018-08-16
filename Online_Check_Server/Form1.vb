@@ -5,6 +5,7 @@ Imports System.Linq
 Imports System.Net
 Imports System.Net.Sockets
 Imports System.Text
+Imports System.Text.RegularExpressions
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports System.Timers
@@ -36,9 +37,15 @@ Public Class Form1
     Dim previousSelectedListViewItem As ListViewItem = Nothing
 
     Dim timer As Timers.Timer
-    Dim timerTickTime As Integer = 3000
+    Dim timerTickTime As Integer = 10000
 
     Dim MINS_TO_CHECK_SERVERS = 1
+
+    Dim email As String = ""
+
+    Dim messageController As New MessageController(email)
+
+    Dim form_Settings As New Settings(Me)
 
 
 
@@ -55,6 +62,8 @@ Public Class Form1
         'begin listening for connections
         StartListener()
         ' XMLController.AddItemToXML(New Connection("1.2.3.4.5", "name goes here", ConnectionStatus.Offline, False, "Time since last check goes here"))
+
+        UpdateSettingsValues()
         UpdateViewFromXML()
 
 
@@ -64,11 +73,17 @@ Public Class Form1
             previousSelectedListViewItem = listView_Connections.TopItem
         End If
 
+        'time for automatic refresh and time since last online check
         timer = New Timers.Timer(timerTickTime)
         AddHandler timer.Elapsed, New ElapsedEventHandler(AddressOf TimerTick)
         timer.Enabled = True
 
+        'Make sure to avoid exceptions relating to executing functions before the GUI is loaded
         isLoaded = True
+
+
+
+        UpdateViewFromXML()
     End Sub
 
 
@@ -97,8 +112,8 @@ Public Class Form1
 
     'Ran on each thread, listens for an incomming connection
     Public Sub Service(id As Integer)
-        '    Console.WriteLine("Thread " & id & " started, waiting for connection...")
 
+        'Loop infinitely to constantly scan for incomming packets
         While True
             Dim socket As Socket = listener.AcceptSocket()
             Dim ip As String = socket.RemoteEndPoint.ToString()
@@ -107,9 +122,9 @@ Public Class Form1
 
 
             Console.WriteLine("Connected " & ip & "on thread ID " & id)
-            Dim currCon As New Connection(IPAddress.Parse(ip), "Unnamed", ConnectionStatus.Online, True.ToString(), DateTime.Now)
+            Dim currCon As New Connection(IPAddress.Parse(ip), "Unnamed", Connection.ConnectionStatus.Online, True.ToString(), DateTime.Now)
             'addConToViewAndXML(currCon)
-            XMLController.AddItemToXML(currCon)
+            XMLController.AddItemToClientListXML(currCon)
             UpdateViewFromXML()
 
 
@@ -117,11 +132,14 @@ Public Class Form1
 
             Try
                 Dim networkStream As NetworkStream = New NetworkStream(socket)
-                Dim streamReader As StreamReader = New StreamReader(networkStream)
                 Dim streamWriter As StreamWriter = New StreamWriter(networkStream)
                 streamWriter.AutoFlush = True
                 streamWriter.WriteLine("Message from SERVER")
+
+                Dim streamReader As StreamReader = New StreamReader(networkStream)
                 Console.WriteLine("Message from connected client: " & streamReader.ReadLine())
+
+
                 networkStream.Close()
             Catch e As Exception
                 Console.WriteLine("EXCEPTION: " & e.Message)
@@ -130,6 +148,8 @@ Public Class Form1
             socket.Close()
         End While
     End Sub
+
+
 
     Public Delegate Sub TimerTickDeleage(ByVal sender As Object, ByVal e As ElapsedEventArgs)
 
@@ -144,32 +164,42 @@ Public Class Form1
 
         Else
             Console.WriteLine("Tick")
-            For Each con As Connection In XMLController.GetAllConnectionsFromXML()
 
-
-            Next
             UpdateViewFromXML()
-            For Each item As ListViewItem In listView_Connections.Items
-                Dim timeSinceCheck As String = item.SubItems(ListViewConsIDs.TimeSinceCheck).Text
-                Console.WriteLine("Time since check = " + timeSinceCheck)
-                timeSinceCheck = timeSinceCheck.Substring(0, timeSinceCheck.IndexOf(" "))
-                Console.WriteLine("Time since check as int = " + timeSinceCheck)
-                If Integer.Parse(timeSinceCheck) > MINS_TO_CHECK_SERVERS Then
-                    Console.WriteLine("Time since check exceeds " + MINS_TO_CHECK_SERVERS.ToString() + " minutes")
-                    SetStatusToOffline(XMLController.GetConnectionFromXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text)))
-                End If
 
-                If item.SubItems(ListViewConsIDs.ServerStatus).Text = OFFLINE_TEXT _
-                And item.SubItems(ListViewConsIDs.SendEmail).Text = NO_SEND_EMAIL_TEXT Then
-                    MessageController.SendEmail(XMLController.GetConnectionFromXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text)))
 
-                End If
-            Next
         End If
 
     End Sub
 
+    Private Sub CheckServerForOffline(item As ListViewItem)
+        ' For Each item As ListViewItem In listView_Connections.Items
+        Dim timeSinceCheck As String = item.SubItems(ListViewConsIDs.TimeSinceCheck).Text
+        Dim con As Connection = XMLController.GetConnectionFromClientListXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text))
+        Console.WriteLine("Time since check = " + timeSinceCheck)
+        timeSinceCheck = timeSinceCheck.Substring(0, timeSinceCheck.IndexOf(" "))
+        Console.WriteLine("Time since check as int = " + timeSinceCheck)
+        If Integer.Parse(timeSinceCheck) > MINS_TO_CHECK_SERVERS Then
+            Console.WriteLine("Time since check exceeds " + MINS_TO_CHECK_SERVERS.ToString() + " minutes")
+            con.SetOffline()
+            XMLController.AddItemToClientListXML(con)
+        Else
+            con.SetOnline()
+            XMLController.AddItemToClientListXML(con)
+        End If
 
+        If item.SubItems(ListViewConsIDs.ServerStatus).Text = OFFLINE_TEXT _
+        And item.SubItems(ListViewConsIDs.SendEmail).Text = SEND_EMAIL_TEXT Then
+            con.sendEmailOnCrash = False
+            item.SubItems(ListViewConsIDs.SendEmail).Text = NO_SEND_EMAIL_TEXT
+            XMLController.AddItemToClientListXML(con)
+
+
+            messageController.SendEmail(XMLController.GetConnectionFromClientListXML(IPAddress.Parse(item.SubItems(ListViewConsIDs.ServerIP).Text)))
+
+        End If
+        '  Next
+    End Sub
 
     'returns Local ip for use in creating TCPListener
     Public Function GetLocalIP() As IPAddress
@@ -185,138 +215,6 @@ Public Class Form1
         Throw New Exception("No network adapters with an IPv4 address in the system!")
     End Function
 
-    'Enum for use in the GUI
-    'Keeps track of what the connection state is.
-    Public Enum ConnectionStatus
-        Online = 0
-        Offline = 1
-    End Enum
-
-    'Uses a delegate if called from a thread
-    'Delegate required due to .net calling functions from new threads
-    Public Delegate Sub addConToViewDelegate(con As Connection)
-    'Adds a new connection to the view when any connection is made on any thread
-    Sub addConToViewFromXML(con As Connection)
-
-        'If called from a thread, send it back through the delegate
-        If Me.InvokeRequired Then
-            Dim del As addConToViewDelegate = New addConToViewDelegate(AddressOf addConToViewFromXML)
-            Dim params() = {con}
-            Me.Invoke(del, params)
-
-        Else 'If called from the deleagte
-            Console.WriteLine("Function addConToViewFromXML called")
-            Dim currCon As New ListViewItem(con.getIP())
-            currCon.SubItems.Add(con.getName())
-            currCon.SubItems.Add(con.getStatusAsString())
-            currCon.SubItems.Add(con.getSendEmailOnCrash())
-            Dim time As String = (DateTime.Now - con.getTimeOfLastCheck()).TotalMinutes.ToString()
-            time = time.Substring(0, time.IndexOf(".")) + " minutes ago"
-            'Console.WriteLine(time)
-            currCon.SubItems.Add(time)
-            'Adds a item to the main listview with the IP, and string based on connection status
-            listView_Connections.Items.Add(currCon)
-
-
-
-        End If
-    End Sub
-
-    '''Public Delegate Sub updateViewFromXMLDeleage()
-    '''Public Sub UpdateViewFromXML()
-
-    '''    If Me.InvokeRequired Then
-    '''        Dim del As updateViewFromXMLDeleage = New updateViewFromXMLDeleage(AddressOf UpdateViewFromXML)
-    '''        Me.Invoke(del)
-    '''    Else
-    '''        Console.WriteLine(">>>entered UpdateView")
-    '''        'Create list of connections saved in XML, limit to ip range
-    '''        Dim connectionList As List(Of Connection) = XMLController.GetAllConnectionsFromXML()
-    '''        connectionList.RemoveAll(AddressOf IsNotBetweenIPs)
-    '''        'Create list of ListViewItems currently shown
-    '''        Dim connectionsInViewList As New List(Of ListViewItem)
-    '''        For Each item As ListViewItem In listView_Connections.Items
-    '''            connectionsInViewList.Add(item)
-    '''        Next
-    '''        'connectionsInViewList.AddRange(listView_Connections.Items)
-
-    '''        Dim connectionsInConnectionListAndViewList As New List(Of Connection)
-    '''        Dim connectionsInConnectionListAndNotViewList As New List(Of Connection)
-
-    '''        For Each item As ListViewItem In connectionsInViewList
-    '''            Dim con As Connection = XMLController.GetConnectionFromXML(IPAddress.Parse(item.Text))
-    '''            If connectionList.Contains(con) Then
-    '''                Console.WriteLine("Added con to  in view list")
-    '''                connectionsInConnectionListAndViewList.Add(con)
-    '''            Else
-    '''                Console.WriteLine("Added con to not in view list")
-    '''                '      connectionsInConnectionListAndNotViewList.Add(con)
-    '''            End If
-    '''        Next
-
-    '''        For Each con As Connection In connectionList
-    '''            If Not connectionsInConnectionListAndViewList.Contains(con) Then
-    '''                connectionsInConnectionListAndNotViewList.Add(con)
-    '''            End If
-    '''        Next
-
-
-
-    '''        For Each item As ListViewItem In connectionsInViewList
-    '''            Console.WriteLine("Ding dong")
-    '''            Dim itemAsCon As Connection = XMLController.GetConnectionFromXML(IPAddress.Parse(item.Text))
-    '''            For Each con As Connection In connectionsInConnectionListAndViewList
-
-    '''                If con.Equals(itemAsCon) Then
-    '''                    Console.WriteLine("ping pong")
-    '''                    Dim newItem As New ListViewItem(con.getIP())
-    '''                    newItem.SubItems.Add(con.getName())
-    '''                    newItem.SubItems.Add(ONLINE_TEXT)
-    '''                    newItem.SubItems.Add(con.getSendEmailOnCrash())
-    '''                    Dim time As String = (DateTime.Now - con.getTimeOfLastCheck()).TotalMinutes.ToString()
-    '''                    time = time.Substring(0, time.IndexOf(".")) + " minutes ago"
-    '''                    'Console.WriteLine(time)
-    '''                    newItem.SubItems.Add(time)
-    '''                    'Adds a item to the main listview with the IP, and string based on connection status
-    '''                    'listView_Connections.Items.Add(newItem)
-    '''                    item = newItem
-
-    '''                End If
-    '''            Next
-    '''        Next
-
-    '''        For Each con As Connection In connectionsInConnectionListAndNotViewList
-    '''            Dim newItem As New ListViewItem(con.getIP())
-    '''            newItem.SubItems.Add(con.getName())
-    '''            newItem.SubItems.Add(con.getStatusAsString())
-    '''            newItem.SubItems.Add(con.getSendEmailOnCrash())
-    '''            Dim time As String = (DateTime.Now - con.getTimeOfLastCheck()).TotalMinutes.ToString()
-    '''            time = time.Substring(0, time.IndexOf(".")) + " minutes ago"
-    '''            'Console.WriteLine(time)
-    '''            newItem.SubItems.Add(time)
-    '''            'Adds a item to the main listview with the IP, and string based on connection status
-    '''            listView_Connections.Items.Add(newItem)
-    '''        Next
-
-    '''    End If
-
-    '''    For Each item As ListViewItem In listView_Connections.Items
-    '''        item.UseItemStyleForSubItems = False
-    '''        If item.SubItems(ListViewConsIDs.ServerStatus).Text = ONLINE_TEXT Then
-    '''            item.SubItems(ListViewConsIDs.ServerStatus).BackColor = ONLINE_COLOR
-    '''        Else
-    '''            item.SubItems(ListViewConsIDs.ServerStatus).BackColor = OFFLINE_COLOR
-    '''        End If
-    '''    Next
-    '''End Sub
-
-    '''Public Function IsNotBetweenIPs(con As Connection) As Boolean
-    '''    If (IpToIntRep(con.ip) > IpToIntRep(ipListLower)) And (IpToIntRep(con.ip) < IpToIntRep(ipListHigher)) Then
-    '''        Return False
-    '''    Else
-    '''        Return True
-    '''    End If
-    '''End Function
 
     Public Delegate Sub updateViewFromXMLDeleage()
     Public Sub UpdateViewFromXML()
@@ -325,30 +223,117 @@ Public Class Form1
             Dim del As updateViewFromXMLDeleage = New updateViewFromXMLDeleage(AddressOf UpdateViewFromXML)
             Me.Invoke(del)
         Else
-            listView_Connections.Items.Clear()
-            Dim connectionList As List(Of Connection) = XMLController.GetAllConnectionsFromXML()
+
+            'listView_Connections.Items.Clear()
+            Dim connectionListFromFile As List(Of Connection) = XMLController.GetAllConnectionsFromClientListXML()
 
 
-            For Each connection In connectionList
+            'Loop through all connection in XML
+            For Each connection In connectionListFromFile
 
-                If (IpToIntRep(connection.ip) > IpToIntRep(ipListLower)) And (IpToIntRep(connection.ip) < IpToIntRep(ipListHigher)) Then
-                    addConToViewFromXML(connection)
-                End If
+                'Limits selected con to be within the currently selected IP range
+                If Not IsNotBetweenLimitIPs(connection) Then
+
+                    Dim foundItem As ListViewItem = Nothing
+                    'Check if connection is already in the view
+                    For Each item As ListViewItem In listView_Connections.Items
+                        If connection.getIP() = item.SubItems(0).Text Then
+                            Console.WriteLine("Con found, editing view to update")
+                            foundItem = item
+                        End If
+                    Next
 
 
-            Next
+                    If foundItem Is Nothing Then
+                        'if item is new, add it
 
-            'set connection state color for each con
-            For Each item As ListViewItem In listView_Connections.Items
-                item.UseItemStyleForSubItems = False
-                If item.SubItems(ListViewConsIDs.ServerStatus).Text = ONLINE_TEXT Then
-                    item.SubItems(ListViewConsIDs.ServerStatus).BackColor = ONLINE_COLOR
+
+                        Console.WriteLine("Function addConToViewFromXML called")
+
+                        'Create list view item with IP as the first item, add subsequent items
+                        foundItem = New ListViewItem(connection.getIP())
+                        foundItem.SubItems.Add(connection.getName())
+                        foundItem.SubItems.Add(connection.getStatusAsString())
+                        foundItem.SubItems.Add(connection.getSendEmailOnCrash())
+                        foundItem.SubItems.Add(getTimeDifferenceInConnection(connection))
+
+
+
+
+
+                        'Adds a item to the main listview with the IP, and string based on connection status
+                        listView_Connections.Items.Add(foundItem)
+
+                    Else
+                        'if item is already in the view, update it
+                        'Check each item first incase its the same, limits flickering
+                        If foundItem.SubItems(0).Text IsNot connection.getIP() Then
+                            foundItem.SubItems(0).Text = connection.getIP()
+                        End If
+
+                        If foundItem.SubItems(1).Text IsNot connection.getName() Then
+                            foundItem.SubItems(1).Text = connection.getName()
+                        End If
+
+                        If foundItem.SubItems(2).Text IsNot connection.getStatusAsString() Then
+                            foundItem.SubItems(2).Text = connection.getStatusAsString()
+                        End If
+
+                        If foundItem.SubItems(3).Text IsNot connection.getSendEmailOnCrash() Then
+                            foundItem.SubItems(3).Text = connection.getSendEmailOnCrash()
+                        End If
+
+                        If foundItem.SubItems(4).Text IsNot getTimeDifferenceInConnection(connection) Then
+                            foundItem.SubItems(4).Text = getTimeDifferenceInConnection(connection)
+                        End If
+
+                    End If
+
+                    CheckServerForOffline(foundItem)
+
+                    'Make sure the Online Status is the correct color
+                    foundItem.UseItemStyleForSubItems = False
+                    If foundItem.SubItems(ListViewConsIDs.ServerStatus).Text = ONLINE_TEXT Then
+                        foundItem.SubItems(ListViewConsIDs.ServerStatus).BackColor = ONLINE_COLOR
+                    Else
+                        foundItem.SubItems(ListViewConsIDs.ServerStatus).BackColor = OFFLINE_COLOR
+                    End If
+
                 Else
-                    item.SubItems(ListViewConsIDs.ServerStatus).BackColor = OFFLINE_COLOR
+                    'make sure item is not in the view if it is not needed
+                    'if found, remove it
+                    Dim foundItem As ListViewItem = Nothing
+                    'Check if connection is already in the view
+                    For Each item As ListViewItem In listView_Connections.Items
+                        If connection.getIP() = item.SubItems(0).Text Then
+                            item.Remove()
+                        End If
+                    Next
                 End If
+
+
+
             Next
+
+
         End If
+
+
     End Sub
+
+    Public Function getTimeDifferenceInConnection(input As Connection) As String
+        Dim time As String = (DateTime.Now - input.getTimeOfLastCheck()).TotalMinutes.ToString()
+        time = time.Substring(0, time.IndexOf(".")) + " minutes ago"
+        Return time
+    End Function
+
+    Public Function IsNotBetweenLimitIPs(con As Connection) As Boolean
+        If (IpToIntRep(con.ip) > IpToIntRep(ipListLower)) And (IpToIntRep(con.ip) < IpToIntRep(ipListHigher)) Then
+            Return False
+        Else
+            Return True
+        End If
+    End Function
 
     'Creates an integer representation of an IP address for use in comparing them
     Public Function IpToIntRep(ip As IPAddress) As Int64
@@ -376,9 +361,9 @@ Public Class Form1
 
         ' Console.WriteLine("toggling ip: " + listView_Connections.Items(0).ToString())
 
-        Dim currCon As Connection = XMLController.GetConnectionFromXML(IPAddress.Parse(listView_Connections.Items(0).Text))
+        Dim currCon As Connection = XMLController.GetConnectionFromClientListXML(IPAddress.Parse(listView_Connections.SelectedItems(0).Text))
         currCon.flipEmailStatus()
-        XMLController.AddItemToXML(currCon)
+        XMLController.AddItemToClientListXML(currCon)
 
         UpdateViewFromXML()
     End Sub
@@ -387,33 +372,57 @@ Public Class Form1
 
         UpdateViewFromXML()
 
-        For Each con As Connection In XMLController.GetAllConnectionsFromXML()
-            Dim messageSuccesful = con.ForceSendMessage()
+        Dim conList As List(Of Connection) = XMLController.GetAllConnectionsFromClientListXML()
+
+        Dim Threads(conList.Count) As Thread
+        For Each con As Connection In conList
+            'Dim thread = New Thread(Sub() Service(threadID))
+            Dim thread = New Thread(Sub() con.ForceRefresh())
+            thread.Start()
         Next
+
 
     End Sub
 
     Private Sub tb_lowerIPRange_TextChanged(sender As Object, e As EventArgs) Handles tb_lowerIPRange.TextChanged, tb_higherIPRange.TextChanged
 
-        Dim regexString = "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
+
+        Dim item As TextBox = sender
+        Dim startingIpListLower = ipListLower
+        Dim startingIpListHigher = ipListHigher
+        Dim regexString = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
         ' if lower and higher ip matches regex
-        '  If RegularExpressions.Regex.IsMatch(tb_lowerIPRange.Text, regexString) Then
-        If IPAddress.TryParse(tb_lowerIPRange.Text, ipListLower) Then
+        If Regex.IsMatch(item.Text, regexString) Then
+            error_ip.SetError(item, "")
 
+            '  If RegularExpressions.Regex.IsMatch(tb_lowerIPRange.Text, regexString) Then
+            If IPAddress.TryParse(tb_lowerIPRange.Text, ipListLower) Then
+                'If ip parsing worked for the LOWER range
+
+            Else
+                ipListLower = IPAddress.Parse("0.0.0.0")
+            End If
+
+            If IPAddress.TryParse(tb_higherIPRange.Text, ipListHigher) Then
+                'if ip parsing worked for the HIGHER range
+
+            Else
+                ipListHigher = IPAddress.Parse("255.255.255.255")
+            End If
+
+            If startingIpListHigher.Equals(ipListHigher) And startingIpListLower.Equals(ipListLower) Then
+                'if they match, dont do anything
+            Else
+                'if one of the addresses has changed, update view
+                UpdateViewFromXML()
+            End If
 
         Else
-            ipListLower = IPAddress.Parse("0.0.0.0")
-        End If
+            error_ip.SetError(item, "Invalid IPv4 format")
 
-        If IPAddress.TryParse(tb_higherIPRange.Text, ipListHigher) Then
-
-
-        Else
-            ipListHigher = IPAddress.Parse("255.255.255.255")
         End If
 
 
-        UpdateViewFromXML()
 
 
     End Sub
@@ -421,14 +430,13 @@ Public Class Form1
 
     Private Sub listView_Connections_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listView_Connections.SelectedIndexChanged
 
-
         'enable and disable the buttons if a listviewitem is selected
         If listView_Connections.SelectedItems.Count <> 0 Then
             previousSelectedListViewItem = listView_Connections.SelectedItems(0)
             btn_forceRefresh.Enabled = True
             btn_toggleServerCheck.Enabled = True
             tb_ServerName.Enabled = True
-            tb_ServerName.Text = listView_Connections.Items(0).SubItems(ListViewConsIDs.ServerName).Text
+            tb_ServerName.Text = listView_Connections.SelectedItems(0).SubItems(ListViewConsIDs.ServerName).Text
         Else
             btn_forceRefresh.Enabled = False
             btn_toggleServerCheck.Enabled = False
@@ -453,17 +461,18 @@ Public Class Form1
 
         ' Console.WriteLine("toggling ip: " + listView_Connections.Items(0).ToString())
         If previousSelectedListViewItem IsNot Nothing Then
+            previousSelectedListViewItem.Selected = True
 
-            Dim currCon As Connection = XMLController.GetConnectionFromXML(IPAddress.Parse(previousSelectedListViewItem.Text))
+            Dim currCon As Connection = XMLController.GetConnectionFromClientListXML(IPAddress.Parse(previousSelectedListViewItem.Text))
             currCon.setName(tb_ServerName.Text)
-            XMLController.AddItemToXML(currCon)
+            XMLController.AddItemToClientListXML(currCon)
 
             'added due to crash relating to executing this code before loading the GUI
             If isLoaded Then
                 UpdateViewFromXML()
             End If
         End If
-
+        previousSelectedListViewItem.Selected = True
 
     End Sub
 
@@ -473,7 +482,7 @@ Public Class Form1
     Private Sub SetStatusToOffline(con As Connection)
 
         con.SetOffline()
-        XMLController.AddItemToXML(con)
+        XMLController.AddItemToClientListXML(con)
 
         'added due to crash relating to executing this code before loading the GUI
         If isLoaded Then
@@ -481,12 +490,28 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub UpdateServerCheckTimers()
-        For Each item As ListViewItem In listView_Connections.Items
+    'on click Settings
+    Private Sub SettingsToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SettingsToolStripMenuItem.Click
+        If form_Settings.Visible Then
+            form_Settings.Hide()
+        Else
+            form_Settings.Show()
+        End If
+    End Sub
 
-        Next
-        UpdateViewFromXML()
+    Public Sub UpdateSettingsValues()
+        timerTickTime = form_Settings.RefreshRate
+        MINS_TO_CHECK_SERVERS = form_Settings.TimeToOffline
+        email = form_Settings.Email
 
+
+        If timer IsNot Nothing Then
+            timer.Interval = timerTickTime
+        End If
+
+        messageController.SetEmail(email)
+
+        Console.WriteLine("settings updated")
     End Sub
 End Class
 

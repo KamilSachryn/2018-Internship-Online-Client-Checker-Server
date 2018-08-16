@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+  <Setting>
+    <Email>pie@pie.pie</Email>
+    <RefreshRate>1000</RefreshRate>
+    <TimeToOffline>1</TimeToOffline>
+  </Setting>
+</Settings>

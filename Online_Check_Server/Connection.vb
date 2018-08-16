@@ -12,13 +12,20 @@ Imports Online_Check_Server
 Public Class Connection
     Public ip As IPAddress
     Public name As String
-    Public status As Form1.ConnectionStatus
+    Public status As ConnectionStatus
     Public sendEmailOnCrash As Boolean
     Public timeOfLastCheck As DateTime
     Public tempSendEmailOnCrash As Boolean
 
+    'Enum for use in the GUI
+    'Keeps track of what the connection state is.
+    Public Enum ConnectionStatus
+        Online = 0
+        Offline = 1
+    End Enum
 
-    Sub New(ip As IPAddress, name As String, status As Form1.ConnectionStatus, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
+
+    Sub New(ip As IPAddress, name As String, status As ConnectionStatus, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
         Me.ip = ip
         Me.name = name
         Me.status = status
@@ -29,17 +36,20 @@ Public Class Connection
         Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip.ToString())
 
     End Sub
-    Sub New(ip As IPAddress, name As String, status As String, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
-        Me.ip = ip
-        Me.name = name
-        Me.status = convertStringToConnectionStatus(status)
-        Me.sendEmailOnCrash = sendEmailOnCrash
-        Me.timeOfLastCheck = timeSinceLastCheck
-        Me.tempSendEmailOnCrash = sendEmailOnCrash
 
-        Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip.ToString())
+    'REMOVED to keep the program uniform, was getting confusing when every other function called different variables
 
-    End Sub
+    'Sub New(ip As IPAddress, name As String, status As String, sendEmailOnCrash As String, timeSinceLastCheck As DateTime)
+    '    Me.ip = ip
+    '    Me.name = name
+    '    Me.status = convertStringToConnectionStatus(status)
+    '    Me.sendEmailOnCrash = sendEmailOnCrash
+    '    Me.timeOfLastCheck = timeSinceLastCheck
+    '    Me.tempSendEmailOnCrash = sendEmailOnCrash
+
+    '    Console.WriteLine("NEW CON CREATED WITH IP = " + Me.ip.ToString())
+
+    'End Sub
 
     Public Function getIP() As String
         Dim strIP As String = ip.ToString()
@@ -48,7 +58,7 @@ Public Class Connection
 
     End Function
 
-    Public Function getStatus() As Form1.ConnectionStatus
+    Public Function getStatus() As ConnectionStatus
         Return status
     End Function
 
@@ -71,9 +81,9 @@ Public Class Connection
     End Function
 
     Public Function getStatusAsString() As String
-        If status = Form1.ConnectionStatus.Offline Then
+        If status = ConnectionStatus.Offline Then
             Return "Offline"
-        ElseIf status = Form1.ConnectionStatus.Online Then
+        ElseIf status = ConnectionStatus.Online Then
             Return "Online"
         Else
             Return "TBD"
@@ -86,21 +96,21 @@ Public Class Connection
 
     Public Sub SetOffline()
 
-        status = Form1.ConnectionStatus.Offline
+        status = ConnectionStatus.Offline
 
     End Sub
 
     Public Sub SetOnline()
-        status = Form1.ConnectionStatus.Online
+        status = ConnectionStatus.Online
     End Sub
 
-    Public Function convertStringToConnectionStatus(status As String) As Form1.ConnectionStatus
+    Public Shared Function convertStringToConnectionStatus(status As String) As ConnectionStatus
         If status = "Online" Then
-            Return Form1.ConnectionStatus.Online
+            Return ConnectionStatus.Online
         ElseIf status = "Offline" Then
-            Return Form1.ConnectionStatus.Offline
+            Return ConnectionStatus.Offline
         Else
-            Return Form1.ConnectionStatus.Offline
+            Return ConnectionStatus.Offline
         End If
 
     End Function
@@ -125,9 +135,44 @@ Public Class Connection
                EqualityComparer(Of IPAddress).Default.Equals(ip, connection.ip)
     End Function
 
-    Public Function ForceSendMessage() As Boolean
-        Return True
-    End Function
+    Public Sub ForceRefresh()
+        Dim conIP As String = getIP()
+        Dim conPort As Integer = 21
+        Dim refreshMessage As String = "Refresh"
+
+        SendMessageToIP(conIP, conPort, refreshMessage)
+    End Sub
+
+    Public Sub SendMessageToIP(conIP As String, conPort As Integer, message As String)
+        Try
+            Console.WriteLine("1")
+
+            Dim client As TcpClient = New TcpClient(conIP, conPort)
+            Try
+                Console.WriteLine("2")
+                Dim stream As Stream = client.GetStream()
+                Console.WriteLine("3")
+                Dim streamWriter As StreamWriter = New StreamWriter(stream)
+                Console.WriteLine("4")
+                streamWriter.AutoFlush = True
+                Console.WriteLine("5")
+                streamWriter.WriteLine(message)
+                Console.WriteLine("6")
+                stream.Close()
+                Console.WriteLine("7")
+            Finally
+                Console.WriteLine("8")
+                client.Close()
+                Console.WriteLine("9")
+            End Try
+            Console.WriteLine("10")
+        Catch ex As Exception
+            Console.WriteLine(ex.Message)
+        End Try
+        Console.WriteLine("11")
+
+
+    End Sub
 
 
 End Class

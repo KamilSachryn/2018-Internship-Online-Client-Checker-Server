@@ -22,6 +22,7 @@ Partial Class Form1
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.listView_Connections = New System.Windows.Forms.ListView()
         Me.col_ip = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.col_Name = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
@@ -38,9 +39,14 @@ Partial Class Form1
         Me.btn_toggleServerCheck = New System.Windows.Forms.Button()
         Me.tb_ServerName = New System.Windows.Forms.TextBox()
         Me.gb_ServerName = New System.Windows.Forms.GroupBox()
+        Me.error_ip = New System.Windows.Forms.ErrorProvider(Me.components)
+        Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
+        Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.gb_IpRange.SuspendLayout()
         Me.gb_serverControls.SuspendLayout()
         Me.gb_ServerName.SuspendLayout()
+        CType(Me.error_ip, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.MenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
         'listView_Connections
@@ -50,7 +56,7 @@ Partial Class Form1
         Me.listView_Connections.FullRowSelect = True
         Me.listView_Connections.GridLines = True
         Me.listView_Connections.LabelEdit = True
-        Me.listView_Connections.Location = New System.Drawing.Point(20, 17)
+        Me.listView_Connections.Location = New System.Drawing.Point(12, 27)
         Me.listView_Connections.Name = "listView_Connections"
         Me.listView_Connections.Size = New System.Drawing.Size(618, 304)
         Me.listView_Connections.TabIndex = 0
@@ -88,11 +94,11 @@ Partial Class Form1
         Me.gb_IpRange.Controls.Add(Me.lbl_IPRangeFrom)
         Me.gb_IpRange.Controls.Add(Me.tb_higherIPRange)
         Me.gb_IpRange.Controls.Add(Me.tb_lowerIPRange)
-        Me.gb_IpRange.Location = New System.Drawing.Point(20, 326)
+        Me.gb_IpRange.Location = New System.Drawing.Point(20, 336)
         Me.gb_IpRange.Margin = New System.Windows.Forms.Padding(2)
         Me.gb_IpRange.Name = "gb_IpRange"
         Me.gb_IpRange.Padding = New System.Windows.Forms.Padding(2)
-        Me.gb_IpRange.Size = New System.Drawing.Size(233, 57)
+        Me.gb_IpRange.Size = New System.Drawing.Size(233, 87)
         Me.gb_IpRange.TabIndex = 1
         Me.gb_IpRange.TabStop = False
         Me.gb_IpRange.Text = "IP Range"
@@ -119,10 +125,10 @@ Partial Class Form1
         '
         'tb_higherIPRange
         '
-        Me.tb_higherIPRange.Location = New System.Drawing.Point(157, 33)
+        Me.tb_higherIPRange.Location = New System.Drawing.Point(145, 33)
         Me.tb_higherIPRange.Margin = New System.Windows.Forms.Padding(2)
         Me.tb_higherIPRange.Name = "tb_higherIPRange"
-        Me.tb_higherIPRange.Size = New System.Drawing.Size(56, 20)
+        Me.tb_higherIPRange.Size = New System.Drawing.Size(84, 20)
         Me.tb_higherIPRange.TabIndex = 1
         '
         'tb_lowerIPRange
@@ -130,14 +136,14 @@ Partial Class Form1
         Me.tb_lowerIPRange.Location = New System.Drawing.Point(38, 33)
         Me.tb_lowerIPRange.Margin = New System.Windows.Forms.Padding(2)
         Me.tb_lowerIPRange.Name = "tb_lowerIPRange"
-        Me.tb_lowerIPRange.Size = New System.Drawing.Size(56, 20)
+        Me.tb_lowerIPRange.Size = New System.Drawing.Size(76, 20)
         Me.tb_lowerIPRange.TabIndex = 0
         '
         'gb_serverControls
         '
         Me.gb_serverControls.Controls.Add(Me.btn_forceRefresh)
         Me.gb_serverControls.Controls.Add(Me.btn_toggleServerCheck)
-        Me.gb_serverControls.Location = New System.Drawing.Point(257, 326)
+        Me.gb_serverControls.Location = New System.Drawing.Point(257, 336)
         Me.gb_serverControls.Margin = New System.Windows.Forms.Padding(2)
         Me.gb_serverControls.Name = "gb_serverControls"
         Me.gb_serverControls.Padding = New System.Windows.Forms.Padding(2)
@@ -176,12 +182,32 @@ Partial Class Form1
         'gb_ServerName
         '
         Me.gb_ServerName.Controls.Add(Me.tb_ServerName)
-        Me.gb_ServerName.Location = New System.Drawing.Point(525, 326)
+        Me.gb_ServerName.Location = New System.Drawing.Point(525, 336)
         Me.gb_ServerName.Name = "gb_ServerName"
         Me.gb_ServerName.Size = New System.Drawing.Size(200, 100)
         Me.gb_ServerName.TabIndex = 4
         Me.gb_ServerName.TabStop = False
         Me.gb_ServerName.Text = "Server Name"
+        '
+        'error_ip
+        '
+        Me.error_ip.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink
+        Me.error_ip.ContainerControl = Me
+        '
+        'MenuStrip1
+        '
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SettingsToolStripMenuItem})
+        Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
+        Me.MenuStrip1.Name = "MenuStrip1"
+        Me.MenuStrip1.Size = New System.Drawing.Size(800, 24)
+        Me.MenuStrip1.TabIndex = 5
+        Me.MenuStrip1.Text = "MenuStrip1"
+        '
+        'SettingsToolStripMenuItem
+        '
+        Me.SettingsToolStripMenuItem.Name = "SettingsToolStripMenuItem"
+        Me.SettingsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
+        Me.SettingsToolStripMenuItem.Text = "Settings"
         '
         'Form1
         '
@@ -192,6 +218,8 @@ Partial Class Form1
         Me.Controls.Add(Me.gb_serverControls)
         Me.Controls.Add(Me.gb_IpRange)
         Me.Controls.Add(Me.listView_Connections)
+        Me.Controls.Add(Me.MenuStrip1)
+        Me.MainMenuStrip = Me.MenuStrip1
         Me.Name = "Form1"
         Me.Text = "Form1"
         Me.gb_IpRange.ResumeLayout(False)
@@ -199,7 +227,11 @@ Partial Class Form1
         Me.gb_serverControls.ResumeLayout(False)
         Me.gb_ServerName.ResumeLayout(False)
         Me.gb_ServerName.PerformLayout()
+        CType(Me.error_ip, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.MenuStrip1.ResumeLayout(False)
+        Me.MenuStrip1.PerformLayout()
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
 
@@ -219,4 +251,7 @@ Partial Class Form1
     Friend WithEvents btn_toggleServerCheck As Button
     Friend WithEvents tb_ServerName As TextBox
     Friend WithEvents gb_ServerName As GroupBox
+    Friend WithEvents error_ip As ErrorProvider
+    Friend WithEvents MenuStrip1 As MenuStrip
+    Friend WithEvents SettingsToolStripMenuItem As ToolStripMenuItem
 End Class
