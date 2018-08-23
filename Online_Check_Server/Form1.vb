@@ -46,6 +46,7 @@ Public Class Form1
     Dim messageController As New MessageController(email)
 
     Dim form_Settings As New Settings(Me)
+    Dim form_SendClient As New TransferClient(Me)
 
 
 
@@ -514,6 +515,16 @@ Public Class Form1
 
         Console.WriteLine("settings updated")
     End Sub
+
+    Private Sub TransferClientToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TransferClientToolStripMenuItem.Click
+
+        If form_SendClient.Visible Then
+            form_SendClient.Hide()
+        Else
+            form_SendClient.Show()
+        End If
+    End Sub
+
 End Class
 
 

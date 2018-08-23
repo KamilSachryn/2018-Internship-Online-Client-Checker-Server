@@ -42,6 +42,7 @@ Partial Class Form1
         Me.error_ip = New System.Windows.Forms.ErrorProvider(Me.components)
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TransferClientToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.gb_IpRange.SuspendLayout()
         Me.gb_serverControls.SuspendLayout()
         Me.gb_ServerName.SuspendLayout()
@@ -196,7 +197,7 @@ Partial Class Form1
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SettingsToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SettingsToolStripMenuItem, Me.TransferClientToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(642, 24)
@@ -208,6 +209,12 @@ Partial Class Form1
         Me.SettingsToolStripMenuItem.Name = "SettingsToolStripMenuItem"
         Me.SettingsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
         Me.SettingsToolStripMenuItem.Text = "Settings"
+        '
+        'TransferClientToolStripMenuItem
+        '
+        Me.TransferClientToolStripMenuItem.Name = "TransferClientToolStripMenuItem"
+        Me.TransferClientToolStripMenuItem.Size = New System.Drawing.Size(95, 20)
+        Me.TransferClientToolStripMenuItem.Text = "Transfer Client"
         '
         'Form1
         '
@@ -254,4 +261,5 @@ Partial Class Form1
     Friend WithEvents error_ip As ErrorProvider
     Friend WithEvents MenuStrip1 As MenuStrip
     Friend WithEvents SettingsToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TransferClientToolStripMenuItem As ToolStripMenuItem
 End Class
