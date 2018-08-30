@@ -13,6 +13,7 @@ Public Class Settings
 
     Private mainForm As Form1
 
+
     Sub New(mainForm As Form1)
 
         ' This call is required by the designer.
@@ -22,6 +23,8 @@ Public Class Settings
 
         Me.mainForm = mainForm
 
+        'list of settings
+        'explained in XML controller class
         Dim list As List(Of String) = XMLController.loadSettings()
 
         Email = list(0)
@@ -33,7 +36,7 @@ Public Class Settings
         tb_TimeToOffline.Text = TimeToOffline
 
 
-
+        'set text boxes to settings or defaults
         If tb_EmailAddress.Text = "" Then
             tb_EmailAddress.Text = Default_Email
             Email = Default_Email
@@ -54,10 +57,8 @@ Public Class Settings
 
     End Sub
 
-    Private Sub Settings_Load(sender As Object, e As EventArgs) Handles Me.Load
-
-    End Sub
-
+    'Sets the refresh rate variables
+    'everytime the texbox changes, we're going to try to parse it and display or hide an error based on regex
     Private Sub tb_RefreshRate_TextChanged(sender As Object, e As EventArgs) Handles tb_RefreshRate.TextChanged
         Dim tb As TextBox = sender
         Dim regexString = "^[0-9]*$" 'Numbers only
@@ -72,6 +73,8 @@ Public Class Settings
 
     End Sub
 
+    'sets the time to offline text box
+    'everytime the texbox changes, we're going to try to parse it and display or hide an error based on regex
     Private Sub tb_TimeToOffline_TextChanged(sender As Object, e As EventArgs) Handles tb_TimeToOffline.TextChanged
 
         Dim tb As TextBox = sender
@@ -86,6 +89,8 @@ Public Class Settings
 
     End Sub
 
+    'sets the email address variables
+    'everytime the texbox changes, we're going to try to parse it and display or hide an error based on regex
     Private Sub tb_EmailAddress_TextChanged(sender As Object, e As EventArgs) Handles tb_EmailAddress.TextChanged
 
         Dim tb As TextBox = sender
@@ -100,6 +105,9 @@ Public Class Settings
 
     End Sub
 
+    'on clicking X, hide the window
+    'needed because otherwise it'll either crash the program due to null variables
+    'or it'll just close it.
     Private Sub Settings_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
 
 
@@ -108,10 +116,12 @@ Public Class Settings
 
     End Sub
 
+    'save settings to XML file and memory
     Private Sub btn_Save_Click(sender As Object, e As EventArgs) Handles btn_Save.Click
 
-
-
+        'make sure all 3 text boxes dont have an arror
+        'if they do not, save them to xml and memory and display a message to confirm
+        'otherwise, do nothing and pop up an error message
         If ep_Email.GetError(tb_EmailAddress) Is "" _
                         And ep_refresh.GetError(tb_RefreshRate) Is "" _
                         And ep_offlineTime.GetError(tb_TimeToOffline) Is "" Then

@@ -7,7 +7,12 @@ Public Class XMLController
     'Dim xmlReader As XmlReader '= XmlReader.Create("ClientList.xml")
     Shared ClientListXmlDoc As New XmlDocument()
     Shared SettingsXmlDoc As New XmlDocument()
+
+    'Creates an XML files if needed, otherwise loads the existing one
+    'currently creates a Settings file and a Client List file.
     Sub New()
+
+        'CLientList
         If System.IO.File.Exists(clientListFileLocation) Then
             Console.WriteLine("Client List FILE EXISTS")
         Else
@@ -30,6 +35,8 @@ Public Class XMLController
             Console.WriteLine("FILE CREATED")
         End If
 
+
+        'Settings
         If System.IO.File.Exists(settingsFileLocation) Then
             Console.WriteLine("Settings FILE EXISTS")
         Else
@@ -52,6 +59,8 @@ Public Class XMLController
             Console.WriteLine("FILE CREATED")
         End If
 
+
+        'load files into memory
         ClientListXmlDoc.Load(clientListFileLocation)
         SettingsXmlDoc.Load(settingsFileLocation)
 
@@ -60,11 +69,12 @@ Public Class XMLController
     End Sub
 
 
-
+    'Adds a connection to the ClientList xml file
     Public Shared Sub AddItemToClientListXML(connection As Connection)
 
         Dim doc As XDocument = XDocument.Load(clientListFileLocation)
 
+        'makes no sense but works well enough.
         Dim node As XElement = doc.Descendants("Connection").FirstOrDefault(Function(cd) cd.Element("IP").Value = connection.getIP())
 
         'If the current connection does not exist, create it, otherwise skip if
@@ -75,11 +85,6 @@ Public Class XMLController
             doc.Element("Connections").Add(currEle)
             node = currEle
         End If
-
-        'Console.WriteLine("START SETTING OR CHANGING NEW CONNECTION ___")
-        'Console.WriteLine(connection.ToString())
-        'Console.WriteLine("END   SETTING OR CHANGING NEW CONNECTION ___")
-
 
         'updated current connection settings
         node.SetElementValue("IP", connection.getIP())
@@ -92,6 +97,7 @@ Public Class XMLController
 
     End Sub
 
+    'creates a list of connections from the XML file
     Public Shared Function GetAllConnectionsFromClientListXML() As List(Of Connection)
         Dim cons As List(Of Connection) = New List(Of Connection)
 
@@ -122,6 +128,7 @@ Public Class XMLController
 
     End Function
 
+    'Retuns a specific connection from the XML file based on IP address
     Public Shared Function GetConnectionFromClientListXML(ip As Net.IPAddress) As Connection
         Dim cons As List(Of Connection) = New List(Of Connection)
 
@@ -155,6 +162,10 @@ Public Class XMLController
 
     End Function
 
+    'create list of strings based on XML settings
+    '0 is Email
+    '1 is Refresh rate
+    '2 is Time to offline
     Public Shared Function loadSettings() As List(Of String)
         Dim list As New List(Of String)
 
@@ -191,12 +202,13 @@ Public Class XMLController
 
     End Function
 
+    'save settings from List of strings to settings xml file
+    '0 is Email
+    '1 is Refresh rate
+    '2 is Time to offline
     Public Shared Sub saveSettings(list As List(Of String))
 
         Dim doc As XDocument = XDocument.Load(settingsFileLocation)
-
-
-
 
         Dim node As XElement = doc.Descendants("Setting").FirstOrDefault()
 
@@ -207,11 +219,6 @@ Public Class XMLController
             doc.Element("Settings").Add(currEle)
             node = currEle
         End If
-
-        'Console.WriteLine("START SETTING OR CHANGING NEW CONNECTION ___")
-        'Console.WriteLine(connection.ToString())
-        'Console.WriteLine("END   SETTING OR CHANGING NEW CONNECTION ___")
-
 
         'updated current connection settings
         node.SetElementValue("Email", list(0))

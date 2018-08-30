@@ -15,7 +15,9 @@ Public Class TransferClient
 
     End Sub
 
-
+    'on clicking X, hide the window
+    'needed because otherwise it'll either crash the program due to null variables
+    'or it'll just close it.
     Private Sub Settings_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
 
 
@@ -24,6 +26,9 @@ Public Class TransferClient
 
     End Sub
 
+    'Sends client to remote machine and install it.
+    'TODO: all of this.
+    'Good luck.
     Private Sub btn_SendClient_Click(sender As Object, e As EventArgs) Handles btn_SendClient.Click
         If ep_ClientIPTB.GetError(tb_ClientIP) = "" Then
             MsgBox("Valid IP, FUNCTION NOT IMPLEMENTED")
@@ -33,9 +38,10 @@ Public Class TransferClient
         End If
     End Sub
 
+    'on changing IP text box, verify its a correect ip format
     Private Sub tb_ClientIP_TextChanged(sender As Object, e As EventArgs) Handles tb_ClientIP.TextChanged
         Dim tb As TextBox = sender
-        Dim regexString = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        Dim regexString = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" 'matches valid IP address
         If Not Regex.IsMatch(tb.Text, regexString) Then
             ep_ClientIPTB.SetError(tb, "Must be a valid IP")
         Else

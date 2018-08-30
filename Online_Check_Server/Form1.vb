@@ -49,7 +49,8 @@ Public Class Form1
     Dim form_SendClient As New TransferClient(Me)
 
 
-
+    'enum to better keep track of strings and IDs
+    'Used so you dont have to memorise what "4" means.
     Enum ListViewConsIDs
         ServerIP = 0
         ServerName = 1
@@ -83,7 +84,8 @@ Public Class Form1
         isLoaded = True
 
 
-
+        'Upate the view if an update is needed
+        'this is called alot throughout the program to make sure that the GUI is always correct.
         UpdateViewFromXML()
     End Sub
 
@@ -112,25 +114,31 @@ Public Class Form1
     End Sub
 
     'Ran on each thread, listens for an incomming connection
+    'On connecting, it will automatically add the connection to both the GUI and the XML file
     Public Sub Service(id As Integer)
 
         'Loop infinitely to constantly scan for incomming packets
         While True
+            'set up variables
             Dim socket As Socket = listener.AcceptSocket()
             Dim ip As String = socket.RemoteEndPoint.ToString()
             ip = ip.Substring(0, ip.LastIndexOf(":"))
 
 
 
+            'create a new connection based on incoming IP
             Console.WriteLine("Connected " & ip & "on thread ID " & id)
             Dim currCon As New Connection(IPAddress.Parse(ip), "Unnamed", Connection.ConnectionStatus.Online, True.ToString(), DateTime.Now)
-            'addConToViewAndXML(currCon)
+
+            'add connection to xml and GUI
             XMLController.AddItemToClientListXML(currCon)
             UpdateViewFromXML()
 
 
 
-
+            'recieves a message from the client computer
+            'presently doesnt actually do anything, but you can make it do whatever you want based on the message
+            'implementation of this is in the Client program.
             Try
                 Dim networkStream As NetworkStream = New NetworkStream(socket)
                 Dim streamWriter As StreamWriter = New StreamWriter(networkStream)
@@ -151,13 +159,14 @@ Public Class Form1
     End Sub
 
 
-
+    'Delegates needed due to multithreaded nature of program
     Public Delegate Sub TimerTickDeleage(ByVal sender As Object, ByVal e As ElapsedEventArgs)
 
     'Runs every timerTrickTime(3000?) seconds
     Public Sub TimerTick(ByVal sender As Object, ByVal e As ElapsedEventArgs)
 
-
+        'standard mutli thread invoke
+        'just runs the function, but makes sure threads do not interfere
         If Me.InvokeRequired Then
             Dim del As TimerTickDeleage = New TimerTickDeleage(AddressOf TimerTick)
             Dim params() = {sender, e}
@@ -173,6 +182,10 @@ Public Class Form1
 
     End Sub
 
+    'checks if the connection has been offline for MINS TO CHECK SERVERS minutes
+    'if it has, set it to offline and update the XML file accordingly
+    'also pop up a box to alert the user that the connection is down
+    'else, do nothing
     Private Sub CheckServerForOffline(item As ListViewItem)
         ' For Each item As ListViewItem In listView_Connections.Items
         Dim timeSinceCheck As String = item.SubItems(ListViewConsIDs.TimeSinceCheck).Text
@@ -217,16 +230,23 @@ Public Class Form1
         Throw New Exception("No network adapters with an IPv4 address in the system!")
     End Function
 
-
+    'standard mutli thread delegate
     Public Delegate Sub updateViewFromXMLDeleage()
+
+    'this is the main function of the entire program
+    'it will check the XML file for all connections
+    'and display their data on the GUI
+    'main complexity comes from displaying the correct list of connections
+    'and correctly displaying it's sub data
     Public Sub UpdateViewFromXML()
 
+        'standard mutli thread invoke
+        'just runs the function, but makes sure threads do not interfere
         If Me.InvokeRequired Then
             Dim del As updateViewFromXMLDeleage = New updateViewFromXMLDeleage(AddressOf UpdateViewFromXML)
             Me.Invoke(del)
         Else
-
-            'listView_Connections.Items.Clear()
+            'load cons from xml
             Dim connectionListFromFile As List(Of Connection) = XMLController.GetAllConnectionsFromClientListXML()
 
 
@@ -323,12 +343,16 @@ Public Class Form1
 
     End Sub
 
+
+    'returns the time between the last successful connection and the current time
     Public Function getTimeDifferenceInConnection(input As Connection) As String
         Dim time As String = (DateTime.Now - input.getTimeOfLastCheck()).TotalMinutes.ToString()
         time = time.Substring(0, time.IndexOf(".")) + " minutes ago"
         Return time
     End Function
 
+
+    'check if current con's ip is not in range
     Public Function IsNotBetweenLimitIPs(con As Connection) As Boolean
         If (IpToIntRep(con.ip) > IpToIntRep(ipListLower)) And (IpToIntRep(con.ip) < IpToIntRep(ipListHigher)) Then
             Return False
@@ -338,6 +362,7 @@ Public Class Form1
     End Function
 
     'Creates an integer representation of an IP address for use in comparing them
+    'might not be needed, but it looks cool.
     Public Function IpToIntRep(ip As IPAddress) As Int64
         Dim val As Int64 = 0
         Dim ipStr As String = ip.ToString()
@@ -359,6 +384,7 @@ Public Class Form1
 
     End Function
 
+    'on clicking enable/disable, flip the server's email check
     Private Sub btn_toggleServerCheck_Click(sender As Object, e As EventArgs) Handles btn_toggleServerCheck.Click
 
         ' Console.WriteLine("toggling ip: " + listView_Connections.Items(0).ToString())
@@ -370,6 +396,8 @@ Public Class Form1
         UpdateViewFromXML()
     End Sub
 
+    'Sends message to connection to force send a connection
+    'thus refreshing the connection's last connect time
     Private Sub btn_forceRefresh_Click(sender As Object, e As EventArgs) Handles btn_forceRefresh.Click
 
         UpdateViewFromXML()
@@ -386,6 +414,7 @@ Public Class Form1
 
     End Sub
 
+    'limit GUI to only show ips between the lower and upper textboxes
     Private Sub tb_lowerIPRange_TextChanged(sender As Object, e As EventArgs) Handles tb_lowerIPRange.TextChanged, tb_higherIPRange.TextChanged
 
 
@@ -430,6 +459,8 @@ Public Class Form1
     End Sub
 
 
+    'on clicking a new connection, change buttons to be enabled/disabled
+    'update name textbox to reflect change
     Private Sub listView_Connections_SelectedIndexChanged(sender As Object, e As EventArgs) Handles listView_Connections.SelectedIndexChanged
 
         'enable and disable the buttons if a listviewitem is selected
@@ -454,11 +485,14 @@ Public Class Form1
 
     End Sub
 
+    'properly quit application on hitting X
     Private Sub Form1_Closed(sender As Object, e As EventArgs) Handles Me.Closed
         Application.Exit()
         End
     End Sub
 
+    'change the server's name on every change in the texbox
+    'updates XML automatically
     Private Sub tb_ServerName_TextChanged(sender As Object, e As EventArgs) Handles tb_ServerName.TextChanged
 
         ' Console.WriteLine("toggling ip: " + listView_Connections.Items(0).ToString())
@@ -480,7 +514,7 @@ Public Class Form1
 
 
 
-
+    'Set connection's status to be Offline, then refresh GUI
     Private Sub SetStatusToOffline(con As Connection)
 
         con.SetOffline()
@@ -492,7 +526,7 @@ Public Class Form1
         End If
     End Sub
 
-    'on click Settings
+    'on click Settings, show the form
     Private Sub SettingsToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SettingsToolStripMenuItem.Click
         If form_Settings.Visible Then
             form_Settings.Hide()
@@ -501,6 +535,8 @@ Public Class Form1
         End If
     End Sub
 
+    'update current memory to reflect settings form's textboxes,
+    'then set all the correct variables And refresh program
     Public Sub UpdateSettingsValues()
         timerTickTime = form_Settings.RefreshRate
         MINS_TO_CHECK_SERVERS = form_Settings.TimeToOffline
@@ -516,6 +552,7 @@ Public Class Form1
         Console.WriteLine("settings updated")
     End Sub
 
+    'pop up transfter client form
     Private Sub TransferClientToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TransferClientToolStripMenuItem.Click
 
         If form_SendClient.Visible Then
