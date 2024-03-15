@@ -5,6 +5,8 @@ This GUI program displays and keeps track of all machines running the client at 
 
 Relatively barebones framework and successful proof of concept made for an Internship.
 
+Includes options for Windows alerts, email messages, and text messages.
+
 
 ### Installation
 
